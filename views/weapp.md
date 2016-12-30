@@ -59,14 +59,13 @@ Page({
 });
 ```
 
-```html
-<!-- pages/todos/todos.js -->
-<block wx:for="{{todos}}" wx:for-item="todo" wx:key="objectId">
-  <text data-id="{{todo.objectId}}">
-    {{todo.content}}
-  </text>
-</block>
-```
+<pre ng-non-bindable><code class="lang-html">&lt;!-- pages/todos/todos.wxml --&gt;
+&lt;block wx:for=&quot;&lbrace;&lbrace;todos&rbrace;&rbrace;&quot; wx:for-item=&quot;todo&quot; wx:key=&quot;objectId&quot;&gt;
+  &lt;text data-id=&quot;&lbrace;&lbrace;todo.objectId}}&quot;&gt;
+    &lbrace;&lbrace;todo.content}}
+  &lt;/text&gt;
+&lt;/block&gt;
+</code></pre>
 
 ### 文件存储
 
