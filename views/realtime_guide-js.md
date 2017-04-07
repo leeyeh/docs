@@ -451,9 +451,8 @@ realtime.createIMClient('tom').then(function(tom) {
 }).then(function(conversation) {
   var message = new OperationMessage();
   message.op = 'typing';
-  // 设置该条消息为暂态消息
-  message.setTransient(true);
-  return conversation.send(message);
+  // 设置将该消息作为暂态消息发送
+  return conversation.send(message, { transient: true });
 }).then(function() {
   console.log('发送成功');
 }).catch(console.error.bind(console));
@@ -491,9 +490,9 @@ realtime.createIMClient('bob').then(function(bob) {
 ```
 
 
-#### 消息送达回执
+#### 消息回执
 
-是指消息被对方收到之后，云端会发送一个回执通知给发送方，表明消息已经送达。
+是指对方收到消息以及对方阅读了消息之后，云端会分别发送一个回执通知发送方。
 
 发送时标记消息为「需要回执」：
 
@@ -504,20 +503,27 @@ conversation.send(message, {
 });
 ```
 
-当消息的接收方收到消息后，服务端会通知消息的发送方「消息已送达」，发送方的 SDK 会在 conversation 上派发一个 `receipt` 事件：
+当消息的接收方收到消息后，服务端会通知消息的发送方「消息已送达」，发送方的 SDK 会更新 conversation 的 `lastDeliveredAt` 属性并在 conversation 上派发一个 `lastdeliveredatupdate` 事件：
 
 ```javascript
-conversation.on('receipt', function(payload) {
-  // payload.message 为送达的消息，与先前发送的是同一实例
-  // message.status 更新为 MessageStatus.DELIVERED
-  // message.deliveredAt 为消息送达的时间
-  console.log(payload.message);
+conversation.on('lastdeliveredatupdate', function() {
+  console.log(conversation.lastDeliveredAt);
+  // 在 UI 中将早于 lastDeliveredAt 的消息都标记为「已送达」
+});
+```
+
+当消息的接收方调用 `Conversation#read` 方法将对话标记为已读后，服务端会通知消息的发送方「消息已读」，发送方的 SDK 会更新 conversation 的 `lastReadAt` 属性并在 conversation 上派发一个 `lastreadatupdate` 事件：
+
+```javascript
+conversation.on('lastreadatupdate', function() {
+  console.log(conversation.lastReadAt);
+  // 在 UI 中将早于 lastReadAt 的消息都标记为「已读」
 });
 ```
 
 需要注意的是：
 
-> 只有在发送时设置了「需要回执」标记，云端才会发送回执，默认不发送回执。该回执并不代表用户已读。
+> 只有在发送时设置了「需要回执」标记，云端才会发送回执，默认不发送回执。
 
 
 #### 自定义离线推送内容
@@ -556,46 +562,36 @@ realtime.createIMClient('Tom').then(function (host) {
 
 未读消息有两种处理方式，未读消息数量通知与离线消息通知。
 
-#### 未读消息数量通知
+#### 未读消息数更新通知
 
-未读消息数量通知是默认的未读消息处理方式：当客户端上线时，会收到其参与过的会话的未读消息数量的通知，然后由客户端负责主动拉取未读的消息并手动标记为已读。
+未读消息数量通知是默认的未读消息处理方式：当客户端上线时，会收到其参与过的会话的未读消息数量的通知，然后由客户端负责主动拉取未读的消息。
 
-当收到未读消息数量通知时，SDK 会在 Client 上派发 `unreadmessages` 事件。
+SDK 会在 `Conversation` 上维护 `unreadMessagesCount` 字段，这个字段在变化时 `IMClient` 会派发 `unreadmessagescountupdate` 事件。这个字段会在下面这些情况下发生变化：
 
-```javascript
-client.on('unreadmessages', function unreadMessagesEventHandler(payload, conversation) {
-  console.log(payload);
-  // {
-  //   count: 4,
-  //   lastMessageId: "UagNXHK0RHqIvM_VB7Injg",
-  //   lastMessageTimestamp: [object Date],
-  // }
-})
+- 登录时，服务端通知会话的未读消息数
+- 收到在线消息
+- 用户将会话标记未已读
 
-// http://jsplay.avosapps.com/xuc/embed?js,console
-```
+开发者应当监听 `unreadmessagescountupdate` 事件，在会话列表界面上更新这些会话的未读消息数量。
 
-如果有多个对话有未读消息，这个事件会被派发多次，对应的 conversation 的未读消息数（`conversation.unreadMessagesCount`）会自动更新，此时开发者可以在对话列表界面上更新这些对话的未读消息数量。
+清除会话未读消息数的唯一方式是调用 `Conversation#read` 方法将会话标记为已读，一般来说开发者至少需要在下面两种情况下将会话标记为已读：
 
-当用户点击进入某个对话时，开发者需要做两件事：
-
-0. 拉取消息记录，参见[聊天记录](#聊天记录)
-1. 调用 `Conversation#markAsRead` 标记该会话为已读：
+- 在会话列表点击某会话进入到会话页面时
+- 用户正某个会话页面聊天，并在这个会话中收到了消息时
 
 ```javascript
-conversation.markAsRead().then(function(conversation) {
+// 进入到会话页面时标记其为已读
+conversation.read().then(function(conversation) {
   console.log('对话已标记为已读');
 }).catch(console.error.bind(console));
+
+// 当前聊天的会话收到了消息立即标记未已读
+currentConversation.on('message', function() {
+  currentConversation.read().catch(console.error.bind(console));
+})
 ```
 
-此时，当前用户其他在线的客户端会收到 `unreadmessages` 消息，将该会话的未读消息数更新为 0。
-
-除了 `Conversation#markAsRead`，SDK 还提供了 `IMClient#markAllAsRead` 方法来批量标记对话为已读：
-```javascript
-client.markAllAsRead([conversation]).then(function() {
-  console.log('对话已全部标记已读');
-}).catch(console.error.bind(console));
-```
+当用户标记某个会话为已读时，该用户其他在线的客户端也会得到通知，SDK 会自动将该会话的未读消息数更新为 0。
 
 #### 离线消息通知
 
@@ -640,9 +636,9 @@ var realtime = new AV.Realtime({
 
 
 
-### 自定义消息
+### 自定义消息属性
 
-在某些场景下，开发者需要在发送消息时附带上自己业务逻辑需求的自定义属性，比如消息发送的设备名称，或是图像消息的拍摄地点、视频消息的来源等等，开发者可以通过  实现这一需求。
+在某些场景下，开发者需要在发送消息时附带上自己业务逻辑需求的自定义属性，比如消息发送的设备名称，或是图像消息的拍摄地点、视频消息的来源等等，开发者可以通过自定义消息属性实现这一需求。
 
 【场景】发照片给朋友，告诉对方照片的拍摄地点：
 
@@ -935,6 +931,8 @@ conversation.count().then(function(membersCount) {
 | `lastMessageAt`       | `lm`             | 最后一条消息发送时间，也可以理解为最后一次活跃时间 |
 | `lastMessage`         | N/A              | 最后一条消息，可能会空               |
 | `unreadMessagesCount` | N/A              | 未读消息数                     |
+| `lastDeliveredAt`     | N/A              | （仅限单聊）最后一条已送达对方的消息时间 |
+| `lastReadAt`          | N/A              | （仅限单聊）最后一条对方已读的消息时间 |
 
 
 
@@ -1181,7 +1179,7 @@ query.contains('keywords', '教育').lessThan('age', 18);
 
 查询自己参与过的对话，包括**系统**对话：
 
-```
+```javascript
 Promise.all([
   client.getQuery().containsMembers([client.id]).find(),
   client.getQuery().equalTo('sys', true).find(),
@@ -1195,7 +1193,7 @@ Promise.all([
 
 查询一段时间内活跃的对话：
 
-```
+```javascript
 client.getQuery()
   .greaterThanOrEqualTo('lm', new Date('2017-01-01 00:00:00'))
   .lessThan('lm', new Date('2017-02-01 00:00:00'))
@@ -1367,53 +1365,56 @@ JavaScript SDK 没有客户端聊天记录缓存机制。
 
 当网络连接出现中断、恢复等状态变化时，SDK 会在 Realtime 实例上派发以下事件：
 
-* `disconnect`：网络连接断开，此时聊天服务不可用。
+* `disconnect`：与服务端连接断开，此时聊天服务不可用。
+* `offline`：网络不可用。
+* `online`：网络恢复。
 * `schedule`：计划在一段时间后尝试重连，此时聊天服务仍不可用。
 * `retry`：正在重连。
-* `reconnect`：网络连接恢复，此时聊天服务可用。
+* `reconnect`：与服务端连接恢复，此时聊天服务可用。
 
 ```javascript
 realtime.on('disconnect', function() {
-  console.log('网络连接已断开');
+  console.log('服务器连接已断开');
+});
+realtime.on('offline', function() {
+  console.log('离线（网络连接已断开）');
+});
+realtime.on('online', function() {
+  console.log('已恢复在线');
 });
 realtime.on('schedule', function(attempt, delay) {
   console.log(delay + 'ms 后进行第' + (attempt + 1) + '次重连');
 });
 realtime.on('retry', function(attempt) {
-  console.log('正在进行第' + attempt + '次重连');
+  console.log('正在进行第' + (attempt + 1) + '次重连');
 });
 realtime.on('reconnect', function() {
-  console.log('网络连接已恢复');
+  console.log('与服务端连接恢复');
 });
 ```
 
 
 
-在 `schedule` 与 `retry` 事件之间，开发者可以调用 `Realtime#retry()` 方法手动进行重连。
+在 `schedule` 与 `retry` 事件之间，开发者可以调用 `Realtime#retry` 方法手动进行重连。
+
+在浏览器中，SDK 会通过 Network Information API 感知到网络的变化自动进入离线状态，在进入离线状态时时会派发 `offline` 事件，在恢复在线时会派发 `online` 事件。在其他环境中可以通过调用 `Realtime#pause` 与 `Realtime#resume` 方法来手动进入、离开离线状态，可以实现实时通信在 App 被切到后台挂起，切回前台恢复等功能。
 
 在断线重连的过程中，SDK 也会在所有的 IMClient 实例上派发同名的事件。Realtime 与 IMClient 上的同名事件是先后同步派发的，唯一的例外是 `reconnect` 事件。在网络连接恢复，Realtime 上派发了 `reconnect` 事件之后，IMClient 会尝试重新登录，成功后再派发 `reconnect` 事件。所以，Realtime 的 `reconnect` 事件意味着 Realtime 实例的 API 能够正常使用了，IMClient 的 `reconnect` 事件意味着 IMClient 实例的 API 能够正常使用了。
 
 下面显示的是一次典型的断线重连过程中 SDK 派发的事件：
 
-```c
-// 连接断开，计划 1s 后重连
-[Realtime & IMClient] disconnect
-[Realtime & IMClient] schedule (attempt=0, delay=1000)
-// 1s 后，尝试重连
-[Realtime & IMClient] retry (attempt=0)
-// 重连失败，计划 2s 后进行第二次重连
-[Realtime & IMClient] schedule (attempt=1, delay=2000)
-// 在 2s 内，手动调用 realtime.retry() 进行重连，重连次数重置
-[Realtime & IMClient] retry (attempt=0)
-// 重连失败，计划 2s 后进行第二次重连
-[Realtime & IMClient] schedule (attempt=1, delay=2000)
-// 2s 后，尝试第二次重连
-[Realtime & IMClient] retry (attempt=1)
-// 连接恢复，此时可以创建新的客户端了
-[Realtime] reconnect
-// 客户端重新登录上线，此时该客户端可以收发消息了
-[IMClient] reconnect
-```
+|时间线|事件派发者|事件|说明|
+|:---:|:---:|:---|:---|
+|网络断开|Realtime,IMClient|`disconnect`|服务端连接断开|
+||Realtime,IMClient|`offline`|离线|
+|网络恢复|Realtime,IMClient|`online`|恢复在线|
+||Realtime,IMClient|`schedule` (attempt=0, delay=1000)|计划 1s 后重连|
+|+1s|Realtime,IMClient|`retry` (attempt=0)|尝试第一次重连|
+|+0.2s</br>重连失败|Realtime,IMClient|`schedule` (attempt=1, delay=2000)|计划 2s 后进行第二次重连|
+|+1.5s</br>调用 `realtime.retry()`|Realtime,IMClient|`retry` (attempt=0)|在 2s 内，手动进行重试，重连次数重置|
+|+0.2s|Realtime|`reconnect`|服务端连接恢复，此时可以创建新的客户端了|
+|+0.2s|IMClient|`reconnect`|客户端重新登录上线，此时该客户端可以收发消息了|
+
 
 ## 退出登录
 
@@ -1576,7 +1577,7 @@ SDK 支持通过插件来对功能进行扩展，比如在解析消息前对原�
 
 ### 插件列表
 
-请参阅 [https://github.com/leancloud/js-realtime-sdk/wiki/Plugins]()。
+请参阅 [https://github.com/leancloud/js-realtime-sdk#插件]()。
 
 ### 使用插件
 
