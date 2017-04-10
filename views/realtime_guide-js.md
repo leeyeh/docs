@@ -494,7 +494,7 @@ realtime.createIMClient('bob').then(function(bob) {
 
 是指对方收到消息以及对方阅读了消息之后，云端会分别发送一个回执通知发送方。
 
-发送时标记消息为「需要回执」：
+使用消息回执功能，需要在发送时标记消息「需要回执」：
 
 ```javascript
 var message = new AV.TextMessage('very important message');
@@ -503,7 +503,9 @@ conversation.send(message, {
 });
 ```
 
-当消息的接收方收到消息后，服务端会通知消息的发送方「消息已送达」，发送方的 SDK 会更新 conversation 的 `lastDeliveredAt` 属性并在 conversation 上派发一个 `lastdeliveredatupdate` 事件：
+##### 送达回执
+
+送达回执只支持单聊。当消息的接收方收到消息后，服务端会通知消息的发送方「消息已送达」，发送方的 SDK 会更新 conversation 的 `lastDeliveredAt` 属性并在 conversation 上派发一个 `lastdeliveredatupdate` 事件：
 
 ```javascript
 conversation.on('lastdeliveredatupdate', function() {
@@ -512,7 +514,13 @@ conversation.on('lastdeliveredatupdate', function() {
 });
 ```
 
-当消息的接收方调用 `Conversation#read` 方法将对话标记为已读后，服务端会通知消息的发送方「消息已读」，发送方的 SDK 会更新 conversation 的 `lastReadAt` 属性并在 conversation 上派发一个 `lastreadatupdate` 事件：
+需要注意的是：
+
+> 只有在发送时设置了「需要回执」标记，云端才会发送回执，默认不发送回执。
+
+##### 已读回执
+
+对于单聊，已读回执的处理与送达回执类似，当消息的接收方调用 `Conversation#read` 方法将对话标记为已读后，发送方的 SDK 会更新 conversation 的 `lastReadAt` 属性并在 conversation 上派发一个 `lastreadatupdate` 事件：
 
 ```javascript
 conversation.on('lastreadatupdate', function() {
@@ -521,10 +529,51 @@ conversation.on('lastreadatupdate', function() {
 });
 ```
 
-需要注意的是：
+对于群聊，我们通过 [leancloud-realtime-plugin-groupchat-receipts](https://www.npmjs.com/package/leancloud-realtime-plugin-groupchat-receipts) 插件的方式提供已读回执的支持。
 
-> 只有在发送时设置了「需要回执」标记，云端才会发送回执，默认不发送回执。
+首先通过 npm 安装插件：
 
+```bash
+npm install leancloud-realtime-plugin-groupchat-receipts --save
+```
+
+在浏览器中加载：
+
+```html
+<script src="./node_modules/leancloud-realtime-plugin-groupchat-receipts/dist/groupchat-receipts.js"></script>
+```
+
+```javascript
+new AV.Realtime({
+  appId: '{{appId}}',
+  plugins: [AV.GroupchatReceiptsPlugin],
+});
+```
+
+或在 CommonJS 运行环境中加载：
+
+```javascript
+var GroupchatReceiptsPlugin = require('leancloud-realtime-plugin-groupchat-receipts').GroupchatReceiptsPlugin;
+
+new AV.Realtime({
+  appId: '{{appId}}',
+  plugins: [GroupchatReceiptsPlugin],
+});
+```
+
+加载了插件之后，多人 Conversation 会增加 `lastReadTimestamps` 属性，该属性是 **对话成员 ID** - **最后已读消息时间** 的键值对。在首次查询该会话的消息记录后，`lastReadTimestamps` 将会得到初始值，之后在会话中的其他成员将会话标记为已读时，SDK 会将 `lastReadTimestamps` 更新到最新值并在 conversation 上派发 `lastreadtimestampsupdate` 事件：
+
+```javascript
+// 以 Tom 身份登录
+conversation.on('lastreadtimestampsupdate', function() {
+  console.log(conversation.lastReadTimestamps);
+  // {
+  //   Jerry: Mon Apr 10 2017 15:19:00 GMT+0800 (CST)
+  //   Bob: Mon Apr 11 2017 19:00:00 GMT+0800 (CST)
+  // }
+  // 根据最新的已读标记时间戳更新 UI
+});
+```
 
 #### 自定义离线推送内容
 
@@ -570,14 +619,14 @@ SDK 会在 `Conversation` 上维护 `unreadMessagesCount` 字段，这个字段�
 
 - 登录时，服务端通知会话的未读消息数
 - 收到在线消息
-- 用户将会话标记未已读
+- 用户将会话标记为已读
 
 开发者应当监听 `unreadmessagescountupdate` 事件，在会话列表界面上更新这些会话的未读消息数量。
 
 清除会话未读消息数的唯一方式是调用 `Conversation#read` 方法将会话标记为已读，一般来说开发者至少需要在下面两种情况下将会话标记为已读：
 
 - 在会话列表点击某会话进入到会话页面时
-- 用户正某个会话页面聊天，并在这个会话中收到了消息时
+- 用户正在某个会话页面聊天，并在这个会话中收到了消息时
 
 ```javascript
 // 进入到会话页面时标记其为已读
@@ -585,7 +634,7 @@ conversation.read().then(function(conversation) {
   console.log('对话已标记为已读');
 }).catch(console.error.bind(console));
 
-// 当前聊天的会话收到了消息立即标记未已读
+// 当前聊天的会话收到了消息立即标记为已读
 currentConversation.on('message', function() {
   currentConversation.read().catch(console.error.bind(console));
 })
@@ -1397,7 +1446,7 @@ realtime.on('reconnect', function() {
 
 在 `schedule` 与 `retry` 事件之间，开发者可以调用 `Realtime#retry` 方法手动进行重连。
 
-在浏览器中，SDK 会通过 Network Information API 感知到网络的变化自动进入离线状态，在进入离线状态时时会派发 `offline` 事件，在恢复在线时会派发 `online` 事件。在其他环境中可以通过调用 `Realtime#pause` 与 `Realtime#resume` 方法来手动进入、离开离线状态，可以实现实时通信在 App 被切到后台挂起，切回前台恢复等功能。
+在浏览器中，SDK 会通过 Network Information API 感知到网络的变化自动进入离线状态，在进入离线状态时会派发 `offline` 事件，在恢复在线时会派发 `online` 事件。在其他环境中可以通过调用 `Realtime#pause` 与 `Realtime#resume` 方法来手动进入或离开离线状态，可以实现实时通信在 App 被切到后台挂起、切回前台恢复等功能。
 
 在断线重连的过程中，SDK 也会在所有的 IMClient 实例上派发同名的事件。Realtime 与 IMClient 上的同名事件是先后同步派发的，唯一的例外是 `reconnect` 事件。在网络连接恢复，Realtime 上派发了 `reconnect` 事件之后，IMClient 会尝试重新登录，成功后再派发 `reconnect` 事件。所以，Realtime 的 `reconnect` 事件意味着 Realtime 实例的 API 能够正常使用了，IMClient 的 `reconnect` 事件意味着 IMClient 实例的 API 能够正常使用了。
 
