@@ -31,7 +31,7 @@
 要使用 LeanCloud 的数据存储、用户系统、调用云引擎等功能，需要使用 LeanCloud 存储 SDK。
 
 ### 安装与初始化
-2. 前往 [下载页](https://releases.leanapp.cn/#/leancloud/javascript-sdk/releases)，下载最新版本的 `av-weapp-min.js`，移动到 `libs` 目录。如果需要使用 LiveQuery 功能，需要下载 `av-weapp-live-query-min.js`。
+2. 前往 [下载页](https://releases.leanapp.cn/#/leancloud/javascript-sdk/releases)，下载最新版本的 `av-weapp-min.js`，移动到 `libs` 目录。如果需要使用 [LiveQuery](livequery-guide.html) 功能，需要下载 `av-weapp-live-query-min.js`。
 3. 在 `app.js` 中使用 `const AV = require('./libs/av-weapp-min.js');` 获得 `AV` 的引用。在其他文件中使用时请将路径替换成对应的相对路径。 
 4. 在 `app.js` 中初始化应用： 
   ```javascript 
