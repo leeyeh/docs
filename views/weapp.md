@@ -32,7 +32,7 @@
 要使用 LeanCloud 的数据存储、用户系统、调用云引擎等功能，需要使用 LeanCloud 存储 SDK。
 
 ### 安装与初始化
-请参阅[《JavaScript SDK 安装指南》](sdk_setup-js.html)中对应平台的说明。
+请参阅《[JavaScript SDK 安装指南](sdk_setup-js.html)》中对应平台的说明。
 
 ### 对象存储
 所有的对象存储 API 都能正常使用，详细的用法请参考 [JavaScript 数据存储开发指南](leanstorage_guide-js.html)。
@@ -233,7 +233,7 @@ SDK 所有的云引擎相关的 API 都能正常使用，详细的用法请参�
 要使用 LeanCloud 的聊天、实时消息功能，需要使用 LeanCloud 实时通讯 SDK。
 
 ### 安装与初始化
-请参阅[《JavaScript SDK 安装指南》](sdk_setup-js.html)中对应平台的说明。
+请参阅《[JavaScript SDK 安装指南](sdk_setup-js.html)》中对应平台的说明。
 
 在 `app.js` 中初始化应用：
 
