@@ -863,9 +863,9 @@ conversation.on(Event.MESSAGE_UPDATE, function(newMessage) {
 
 逻辑模型|通用描述|需求场景|详细文档
 --|--|--|--
-暂态对话|聊天室|体育直播，娱乐直播等|[聊天室开发指南](realtime-chatroom.html)
-系统对话|服务号，订阅号|系统通知，全员广播|[服务号开发指南](realtime-service-account.html)
-临时对话|-|在线客服，闪聊，阅后即焚|[临时对话开发指南](realtime-temporary-conversation.html)
+暂态对话|聊天室|体育直播、娱乐直播等|[聊天室开发指南](realtime-chatroom.html)
+系统对话|服务号、订阅号|系统通知、全员广播|[服务号开发指南](realtime-service-account.html)
+临时对话|-|在线客服、闪聊、阅后即焚|[临时对话开发指南](realtime-temporary-conversation.html)
 
 对话的管理包括「成员管理」和「属性管理」两个方面。
 
