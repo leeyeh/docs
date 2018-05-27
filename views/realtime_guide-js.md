@@ -606,7 +606,7 @@ realtime.createIMClient('Tom').then(function (host) {
 }).catch(console.error);
 ```
 
-这种方式被称为「附件方式」，这里有一点非常重要：如果您在 [云引擎实时通信离线消息推送 Hook](leanengine_cloudfunction_guide-node.html#_receiversOffline)里面定义了云函数来修改离线消息的内容，云端会优先使用 Hook 函数返回的结果作为最后推送的内容
+这种方式被称为「附件方式」，这里有一点非常重要：如果你已在 [云引擎实时通信离线消息推送 Hook `_receiversOffline`](leanengine_cloudfunction_guide-node.html#_receiversOffline) 里面定义了云函数来修改离线消息的内容，云端会优先使用 Hook 函数返回的结果作为最后推送的内容。
 
 除此以外，还有其他方法来自定义离线推送内容，请参考 [实时通信概览 &middot; 离线推送通知](realtime_v2.html#离线推送通知)。
 
@@ -1229,7 +1229,7 @@ query.limit(20).containsMembers(['Tom']).find().then(function(conversations) {
 
 #### 条件查询
 
-对话的条件查询需要注意的对话属性的存储结构，在对话的属性一章节我们介绍的对话的几个基本属性，这些属性都是 SDK 提供的默认属性，根据默认属性查询的构建如下：
+对话的条件查询需要注意的对话属性的存储结构，在 [对话的属性](#对话的属性管理) 这一节中我们介绍了对话的基本属性，这些属性都是 SDK 提供的默认属性，查询默认属性的方法如下：
 
 ```javascript
 // 查询对话名称为「LeanCloud 粉丝群」的对话
@@ -1415,7 +1415,7 @@ JavaScript SDK 会对按照对话 id 对对话进行内存字典缓存，但不�
 
 聊天室与普通对话或群聊不一样的地方具体体现为：
 
-* **无人数限制**（而普通对话最多允许 500 人加入）<br/><span class="text-muted">从实际经验来看，为避免过量消息刷屏而影响用户体验，我们建议每个聊天室的<u>上限人数控制在 **5000 人**左右</u>。开发者可以考虑从应用层面将大聊天室拆分成多个较小的聊天室。</span>
+* **无人数限制**（而普通对话最多允许 500 人加入）<br/>从实际经验来看，为避免过量消息刷屏而影响用户体验，我们建议每个聊天室的<u>上限人数控制在 **5000 人**左右</u>。开发者可以考虑从应用层面将大聊天室拆分成多个较小的聊天室。
 * 不支持查询成员列表，但可以通过相关 API 查询在线人数。
 * 不支持离线消息、离线推送通知、消息回执等功能。
 * 没有成员加入、成员离开的通知。
@@ -1423,7 +1423,7 @@ JavaScript SDK 会对按照对话 id 对对话进行内存字典缓存，但不�
 * 加入后半小时内断网重连会自动加入原聊天室，超过这个时间则需要重新加入。
 
 {% call docs.bubbleWrap() -%}
-关于聊天室我们在最新的 SDK 中提供了内置的封装模型，请阅读[实时通信 - 聊天室开发指南](realtime-chatroom.html)。
+我们在最新的 SDK 中为聊天室提供了内置的封装模型，请阅读 [实时通信 - 聊天室开发指南](realtime-chatroom.html)。
 {%- endcall %}
 
 ### 创建聊天室
@@ -1701,7 +1701,7 @@ realtime.createIMClient('Tom', {
 ```
 
 
-{{ docs.alert("需要强调的是：开发者切勿在客户端直接使用 MasterKey 进行签名操作，因为 MaterKey 一旦泄露，会造成应用的数据处于高危状态，后果不容小视。因此，强烈建议开发者将签名的具体代码托管在安全性高稳定性好的云端服务器上（例如 LeanCloud 云引擎）。") }}
+{{ docs.alert("需要强调的是：开发者切勿在客户端直接使用 MasterKey 进行签名操作，因为 MaterKey 一旦泄露，应用的数据将处于高危状态，后果不容小视。因此，强烈建议开发者将签名的具体代码托管在安全性高稳定性好的云端服务器上（例如 LeanCloud 云引擎）。") }}
 
 为了帮助开发者理解云端签名的算法，我们开源了一个用 Node.js + 云引擎实现签名的云端，供开发者学习和使用：[LeanCloud 实时通信云引擎签名 Demo](https://github.com/leancloud/realtime-messaging-signature-cloudcode)。
 
@@ -1834,9 +1834,9 @@ var EnsureFileIdPlugin = {
 - 插件对象需要有 `name` 字段，用于在日志中显示异常的插件名称，建议与 package 名称相同。
 
 ## SDK 升级指南
-如果你的应用正在使用 JavaScript SDK version 2 并希望升级到 version 3，请参考 [《JavaScript 实时通信 SDK v3 迁移指南》](./realtime_js-v3-migration-guide.html)。
+将 JavaScript SDK version 2 升级到 version 3，请参考《[JavaScript 实时通信 SDK v3 迁移指南](./realtime_js-v3-migration-guide.html)》。
 
-如果你的应用正在使用 JavaScript SDK version 3 并希望升级到 version 4，请参考 [《JavaScript 实时通信 SDK v4 升级检查清单》](https://github.com/leancloud/js-realtime-sdk/wiki/v4.0-upgrade-checklist)。
+将 JavaScript SDK version 3 升级到 version 4，请参考《[JavaScript 实时通信 SDK v4 升级检查清单](https://github.com/leancloud/js-realtime-sdk/wiki/v4.0-upgrade-checklist)》。
 
 ## 实时通信云引擎 Hook
 一些应用因其特殊的业务逻辑需要在消息发送时或者消息接收时插入一定的逻辑，因此我们也提供了[实时通信云引擎 Hook](realtime_v2.html#云引擎_Hook)。
