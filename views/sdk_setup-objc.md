@@ -106,7 +106,7 @@ ruby build-framework.rb
 [AVOSCloud setApplicationId:@"{{appid}}" clientKey:@"{{appkey}}"];
 ```
 
-使用 **美国节点** 需要增加以下代码：
+如果你的应用在 **美国节点**，并且使用 11.4.0 之前版本的 SDK，还需要增加以下代码：
 
 ```objc
 [AVOSCloud setServiceRegion:AVServiceRegionUS];

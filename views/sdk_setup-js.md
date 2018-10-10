@@ -352,34 +352,6 @@ AV.init({
 });
 ```
 
-### 启用指定节点
-
-SDK 的初始化方法默认使用**中国大陆节点**，如需切换到 [其他可用节点](#全球节点)，请参考如下用法：
-
-```javascript
-var APP_ID = '{{appid}}';
-var APP_KEY = '{{appkey}}';
-AV.init({
-  appId: APP_ID,
-  appKey: APP_KEY,
-  {% if node != 'qcloud' -%}
-  // 启用美国节点
-  region: 'us'
-  {% else -%}
-  // 目前仅支持中国节点
-  region: 'cn'
-  {% endif %}
-  
-});
-```
-
-### 全球节点
-
-- 中国大陆节点 **leancloud.cn**（SDK 初始化方法**默认**使用该节点）
-- 北美节点 **us.leancloud.cn**（服务北美市场）
-
-{{ docs.alert("各个节点彼此独立，开发者账号无法跨节点来创建应用或调用 API。") }}
-
 ## 验证
 
 首先，确认本地网络环境是可以访问 LeanCloud 服务器的，可以执行以下命令行：
