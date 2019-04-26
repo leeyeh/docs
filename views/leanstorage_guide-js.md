@@ -571,11 +571,11 @@ todoFolder.put('owner', AV.User.current()); // Pointer 类型属性
 
 // 将 AV.Object 对象反序列化成 JSON 对象
 var json = todoFolder.toFullJSON();
-// 将JSON 对象序列化为字符串
+// 将 JSON 对象序列化为字符串
 var serializedString = JSON.stringify(json);
 ```
 
-{{ docs.note("`AV.Object` 还提供了另一个方法 `#toJSON()`。他们的区别是 `#toJSON()` 得到的对象仅包含对象的有效载荷，一般用于展示，而 `#toFullJSON()` 得到的对象包含了元数据，一般用于传输。在使用时请注意区分。") }}
+{{ docs.note("`AV.Object` 还提供了另一个方法 `#toJSON()`。他们的区别是 `#toJSON()` 得到的对象仅包含对象的 payload，一般用于展示，而 `#toFullJSON()` 得到的对象包含了元数据，一般用于传输。在使用时请注意区分。") }}
 
 {% endblock %}
 

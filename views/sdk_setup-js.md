@@ -25,7 +25,7 @@
 ```bash
 # 存储服务（包括推送）
 $ npm install leancloud-storage --save
-#  SDK 的初始化请参考 ``服务
+#  即时通讯服务
 $ npm install leancloud-realtime --save
 ```
 
