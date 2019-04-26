@@ -575,7 +575,7 @@ var json = todoFolder.toFullJSON();
 var serializedString = JSON.stringify(json);
 ```
 
-{{ docs.note("`AV.Object` 还提供了另一个方法 `#toJSON()`。他们的区别是 `#toJSON()` 得到的对象仅包含对象的 payload，一般用于展示，而 `#toFullJSON()` 得到的对象包含了元数据，一般用于传输。在使用时请注意区分。") }}
+{{ docs.note("`AV.Object` 还提供了另一个方法 `#toJSON()`。它们的区别是 `#toJSON()` 得到的对象仅包含对象的 payload，一般用于展示，而 `#toFullJSON()` 得到的对象包含了元数据，一般用于传输。在使用时请注意区分。") }}
 
 {% endblock %}
 
